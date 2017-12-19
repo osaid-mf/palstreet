@@ -12,6 +12,10 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,6 +26,7 @@ import java.net.URLConnection;
 public class MainActivity extends AppCompatActivity {
 
     private MapView mapView;
+    JSONArray myarray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         mapView.onCreate(savedInstanceState);
 
 
-        String url = "http://10.0.2.2/palstreet/public/get-news";
+        String url = "http://192.168.1.103/palstreet/public/get-news";
         DownloadTextTask runner = new DownloadTextTask();
         runner.execute(url);
 
@@ -41,17 +46,45 @@ public class MainActivity extends AppCompatActivity {
         mapView.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(MapboxMap mapboxMap) {
-                mapboxMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(48.85819, 2.29458))
-                        .title("Eiffel Tower")
-                );
+
+              try{
+                  for (int i=0;i<myarray.length();i++){
+                      JSONObject myobject = myarray.getJSONObject(i);
+
+                      double xp= myobject.getDouble("xpoint");
+                      double yp= myobject.getDouble("ypoint");
+                      String title = myobject.getString("title");
+
+
+                      mapboxMap.addMarker(new MarkerOptions()
+                              .position(new LatLng(xp, yp))
+                              .title(title)
+                      );
+
+                  }
+              }catch (Exception e){
+
+              }
+
+
+
+
+
+
+
+
+
+
+
             }
         });
 
-
-
-
     }
+
+
+
+
+
 
     private InputStream OpenHttpConnection(String urlString) throws IOException
     {
@@ -82,36 +115,39 @@ public class MainActivity extends AppCompatActivity {
         return in;
     }
 
-    private String DownloadText(String url){
-        int BUFFER_SIZE=2000;
-        InputStream in = null;
 
+
+    private String DownloadText(String URL)
+    {
+        int BUFFER_SIZE = 2000;
+        InputStream in = null;
         try {
-            in = OpenHttpConnection(url);
-        } catch (IOException ex) {
-            Log.d("NetWorking", ex.getLocalizedMessage());
+            in = OpenHttpConnection(URL);
+        } catch (IOException e) {
+            Log.d("Networking", e.getLocalizedMessage());
             return "";
         }
 
         InputStreamReader isr = new InputStreamReader(in);
         int charRead;
-        String string = "";
+        String str = "";
         char[] inputBuffer = new char[BUFFER_SIZE];
-
-        try{
-            while ((charRead = isr.read(inputBuffer))>0){
-                String readString = String.copyValueOf(inputBuffer, 0, charRead);
-                string +=readString;
+        try {
+            while ((charRead = isr.read(inputBuffer))>0) {
+                //---convert the chars to a String---
+                String readString =
+                        String.copyValueOf(inputBuffer, 0, charRead);
+                str += readString;
                 inputBuffer = new char[BUFFER_SIZE];
             }
             in.close();
-        }catch (IOException ex){
-            Log.d("NetWorking", ex.getLocalizedMessage());
+        } catch (IOException e) {
+            Log.d("Networking", e.getLocalizedMessage());
             return "";
         }
-
-        return string;
+        return str;
     }
+
 
 
     private class DownloadTextTask extends AsyncTask<String, Void, String> {
@@ -122,13 +158,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String result) {
             //Toast.makeText(getBaseContext(), result, Toast.LENGTH_LONG).show();
-            String[] books = result.split(",");
-            String str = "";
-            for(String s : books){
-                str+= s + "\n";
-            }
 
-            Log.e("myeshe",str);
+            try {
+                 myarray = new JSONArray(result);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 
