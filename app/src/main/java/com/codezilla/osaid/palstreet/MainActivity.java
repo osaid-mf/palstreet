@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MapView mapView;
     JSONArray myarray;
+    //get marker from server
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
