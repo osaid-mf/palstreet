@@ -14,7 +14,9 @@
         mapbox:mapbox_cameraTargetLat="32.195"
         mapbox:mapbox_cameraTargetLng="35.950"
         mapbox:mapbox_styleUrl="mapbox://styles/osaid-makhalfeh/cj9ldb12e1i0b2sovq2hualpq"
-        mapbox:mapbox_cameraZoom="7.4" />
+        mapbox:mapbox_cameraZoom="7.4" >
+
+    </com.mapbox.mapboxsdk.maps.MapView>
 
 
 </android.support.constraint.ConstraintLayout>

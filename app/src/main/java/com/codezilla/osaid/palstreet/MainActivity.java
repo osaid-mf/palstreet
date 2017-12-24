@@ -1,12 +1,17 @@
 package com.codezilla.osaid.palstreet;
 
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.annotations.Icon;
+import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
+import com.mapbox.mapboxsdk.annotations.PolylineOptions;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
@@ -22,11 +27,19 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
 
     private MapView mapView;
-    JSONArray myarray;
+
+    List<News> lastNews;
     //get marker from server
 
     @Override
@@ -38,136 +51,95 @@ public class MainActivity extends AppCompatActivity {
         mapView.onCreate(savedInstanceState);
 
 
-        String url = "http://192.168.1.103/palstreet/public/get-news";
-        DownloadTextTask runner = new DownloadTextTask();
-        runner.execute(url);
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(WebService.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
 
 
+        WebService webService = retrofit.create(WebService.class);
+        Call<List<News>> call = webService.getNews();
 
-        mapView.getMapAsync(new OnMapReadyCallback() {
+        call.enqueue(new Callback<List<News>>() {
             @Override
-            public void onMapReady(MapboxMap mapboxMap) {
+            public void onResponse(Call<List<News>> call, Response<List<News>> response) {
 
-              try{
-                  for (int i=0;i<myarray.length();i++){
-                      JSONObject myobject = myarray.getJSONObject(i);
-
-                      double xp= myobject.getDouble("xpoint");
-                      double yp= myobject.getDouble("ypoint");
-                      String title = myobject.getString("title");
+                lastNews = response.body();
+                mapView.getMapAsync(new OnMapReadyCallback() {
 
 
-                      mapboxMap.addMarker(new MarkerOptions()
-                              .position(new LatLng(xp, yp))
-                              .title(title)
-                      );
+                    @Override
+                    public void onMapReady(MapboxMap mapboxMap) {
 
-                  }
-              }catch (Exception e){
-
-              }
+                        // Create an Icon object for the marker to use
+                        IconFactory iconFactory = IconFactory.getInstance(MainActivity.this);
+                        Icon icon = iconFactory.fromResource(R.drawable.koas);
 
 
+                        try{
+                            for (int i=0;i<lastNews.size();i++){
+
+                                double xp= lastNews.get(i).getXpoint();
+                                double yp= lastNews.get(i).getYpoint();
+                                String title = lastNews.get(i).getTitle();
+                                int type = lastNews.get(i).getType();
+
+                                if (type==1){
+
+                                    icon = iconFactory.fromResource(R.drawable.gun);
+                                    mapboxMap.addMarker(new MarkerOptions()
+                                            .position(new LatLng(xp, yp))
+                                            .title(title)
+                                            .icon(icon)
+                                    );
+
+                                }else if(type==2){
+                                    icon = iconFactory.fromResource(R.drawable.koas);
+                                    mapboxMap.addMarker(new MarkerOptions()
+                                            .position(new LatLng(xp, yp))
+                                            .title(title)
+                                            .icon(icon)
+                                    );
+                                }else if (type==5){
+                                    icon = iconFactory.fromResource(R.drawable.car);
+                                    mapboxMap.addMarker(new MarkerOptions()
+                                            .position(new LatLng(xp, yp))
+                                            .title(title)
+                                            .icon(icon)
+                                    );
+                                }else {
+                                    mapboxMap.addMarker(new MarkerOptions()
+                                            .position(new LatLng(xp, yp))
+                                            .title(title)
+                                    );
+
+                                }
+                            }
+                        }catch (Exception e){
+                            Log.e("MarkersProblem",e.getLocalizedMessage());
+                        }
+                    }
+                });
 
 
 
 
 
+            }
 
+            @Override
+            public void onFailure(Call<List<News>> call, Throwable t) {
 
-
-
+                Toast.makeText(getApplicationContext(), t.getMessage()+"retrofit(call Support) problem", Toast.LENGTH_SHORT).show();
             }
         });
 
+
+
+
     }
 
 
-
-
-
-
-    private InputStream OpenHttpConnection(String urlString) throws IOException
-    {
-        InputStream in = null;
-        int response = -1;
-
-        URL url = new URL(urlString);
-        URLConnection conn = url.openConnection();
-
-        if (!(conn instanceof HttpURLConnection))
-            throw new IOException("Not an HTTP connection");
-        try{
-            HttpURLConnection httpConn = (HttpURLConnection) conn;
-            httpConn.setAllowUserInteraction(false);
-            httpConn.setInstanceFollowRedirects(true);
-            httpConn.setRequestMethod("GET");
-            httpConn.connect();
-            response = httpConn.getResponseCode();
-            if (response == HttpURLConnection.HTTP_OK) {
-                in = httpConn.getInputStream();
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.d("Networking", ex.getLocalizedMessage());
-            throw new IOException("Error connecting");
-        }
-        return in;
-    }
-
-
-
-    private String DownloadText(String URL)
-    {
-        int BUFFER_SIZE = 2000;
-        InputStream in = null;
-        try {
-            in = OpenHttpConnection(URL);
-        } catch (IOException e) {
-            Log.d("Networking", e.getLocalizedMessage());
-            return "";
-        }
-
-        InputStreamReader isr = new InputStreamReader(in);
-        int charRead;
-        String str = "";
-        char[] inputBuffer = new char[BUFFER_SIZE];
-        try {
-            while ((charRead = isr.read(inputBuffer))>0) {
-                //---convert the chars to a String---
-                String readString =
-                        String.copyValueOf(inputBuffer, 0, charRead);
-                str += readString;
-                inputBuffer = new char[BUFFER_SIZE];
-            }
-            in.close();
-        } catch (IOException e) {
-            Log.d("Networking", e.getLocalizedMessage());
-            return "";
-        }
-        return str;
-    }
-
-
-
-    private class DownloadTextTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... urls) {
-            return DownloadText(urls[0]);
-        }
-        @Override
-        protected void onPostExecute(String result) {
-            //Toast.makeText(getBaseContext(), result, Toast.LENGTH_LONG).show();
-
-            try {
-                 myarray = new JSONArray(result);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
 
     @Override
