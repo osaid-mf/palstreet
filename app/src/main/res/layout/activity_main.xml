@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:design="http://schemas.android.com/apk/res-auto"
     xmlns:mapbox="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.codezilla.osaid.palstreet.MainActivity">
@@ -13,10 +14,18 @@
         android:layout_height="match_parent"
         mapbox:mapbox_cameraTargetLat="32.195"
         mapbox:mapbox_cameraTargetLng="35.950"
-        mapbox:mapbox_styleUrl="mapbox://styles/osaid-makhalfeh/cj9ldb12e1i0b2sovq2hualpq"
-        mapbox:mapbox_cameraZoom="7.4" >
+        mapbox:mapbox_cameraZoom="7.4"
+        mapbox:mapbox_styleUrl="mapbox://styles/osaid-makhalfeh/cj9ldb12e1i0b2sovq2hualpq">
+
 
     </com.mapbox.mapboxsdk.maps.MapView>
 
-
-</android.support.constraint.ConstraintLayout>
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        app:layout_anchor="@+id/mapView"
+        app:layout_anchorGravity="bottom|center"
+        app:srcCompat="@drawable/ic_moajhat" />
+</android.support.design.widget.CoordinatorLayout>

@@ -42,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
     List<News> lastNews;
     //get marker from server
 
+    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +61,13 @@ public class MainActivity extends AppCompatActivity {
 
         WebService webService = retrofit.create(WebService.class);
         Call<List<News>> call = webService.getNews();
+
+
+
+
+
+
+
 
         call.enqueue(new Callback<List<News>>() {
             @Override
